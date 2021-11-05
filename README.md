@@ -1,4 +1,4 @@
-#CZ4031 Database Design Principles (Project 2)
+# CZ4031 Database Design Principles (Project 2)
 
 ## Set-up
 ### Install required packages to your python environment
