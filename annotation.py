@@ -1,94 +1,101 @@
-
-
-def annotate(querySteps):
-    length = len(querySteps)
-    holdOutput = None
-    holdInt = 0
+def annotate(query_steps):
     output = []
-    outputCount = 0
-    useHold = False
+    length = len(query_steps)
+    hold_output = None
+    hold_int = 0
+    output = []
+    output_count = 0
+    use_hold = False
     while length >= 1:
-        curStep = querySteps[length - 1] # read steps bottom up
-        curLayer = int(querySteps[length - 1][0:2])
-        aboveLayer = int(querySteps[length - 2][0:2])
-        # print("length: "+ str(length)+" querystep: "+querySteps[length-1])
+        cur_step = query_steps[length - 1]  # read steps bottom up
+        curLayer = int(query_steps[length - 1][0:2])
+        aboveLayer = int(query_steps[length - 2][0:2])
+        # print("length: "+ str(length)+" querystep: "+query_steps[length-1])
 
-        if "Join" in curStep or "Loop" in curStep:  # for operations that need 2 inputs
-#            if useHold:
-#                # print(curStep[2:] + " on " + holdOutput[2:] + " and on " + output[2:])
-#                outputStep = curStep[2:] + " on OUTPUT " + str(holdInt) + " and on OUTPUT " + str(
-#                    outputCount - 1)
-#                print(outputStep)
-#               useHold = False
-#            else:
-#                # print(curStep[2:] + " on " + querySteps[length + 1][2:] + " and on " + output[2:])
-#                outputStep = curStep[2:] + " on OUTPUT " + str(outputCount-2) + " and on OUTPUT " + str(outputCount-1)
-#                print(outputStep)
-#                if holdOutput is not None:
-#                    # print(holdOutput[:2] + " " + curStep)
-#                    if int(holdOutput[:2]) == int(curStep[:2]):
-#                        # print("usehold is true")
-#                        useHold = True
-#            output.append(curStep[:2]+"OUTPUT " + str(outputCount) + ": "+outputStep)
-#            outputCount += 1
-            joinOutput = []
+        if "Join" in cur_step or "Loop" in cur_step:  # for operations that need 2 inputs
+            #            if use_hold:
+            #                # print(cur_step[2:] + " on " + hold_output[2:] + " and on " + output[2:])
+            #                output_step = cur_step[2:] + " on OUTPUT " + str(hold_int) + " and on OUTPUT " + str(
+            #                    output_count - 1)
+            #                print(output_step)
+            #               use_hold = False
+            #            else:
+            #                # print(cur_step[2:] + " on " + querySteps[length + 1][2:] + " and on " + output[2:])
+            #                output_step = cur_step[2:] + " on OUTPUT " + str(output_count-2) + " and on OUTPUT " + str(output_count-1)
+            #                print(output_step)
+            #                if hold_output is not None:
+            #                    # print(hold_output[:2] + " " + cur_step)
+            #                    if int(hold_output[:2]) == int(cur_step[:2]):
+            #                        # print("usehold is true")
+            #                        use_hold = True
+            #            output.append(cur_step[:2]+"OUTPUT " + str(output_count) + ": "+output_step)
+            #            output_count += 1
+            join_output = []
             i = 0
             limit = None
-            for out in output: # get all output 1 level lower
-                outLayer = int(out[:2])
-                if outLayer>curLayer:
+            for out in output:  # get all output 1 level lower
+                out_layer = int(out[:2])
+                if out_layer > curLayer:
                     if limit is not None:
-                        if outLayer<limit:
-                            joinOutput=[]
-                            limit = outLayer
-                            joinOutput.append(out)
+                        if out_layer < limit:
+                            join_output = []
+                            limit = out_layer
+                            join_output.append(out)
 
-                        elif outLayer==limit:
-                            joinOutput.append(out)
+                        elif out_layer == limit:
+                            join_output.append(out)
 
                     else:
-                        limit = outLayer
-                        joinOutput.append(out)
+                        limit = out_layer
+                        join_output.append(out)
 
-            outputStep = curStep[2:] + " on ("
-            for joinOut in joinOutput:
-                outNum = joinOut.split("OUTPUT ")[1][:1]
-                outputStep += 'OUTPUT ' + outNum+", "
-            outputStep += ")"
-            output.append(curStep[:2]+"OUTPUT " + str(outputCount) + ": "+outputStep)
-            outputCount += 1
+            output_step = cur_step[3:] + " on ("
+            for joinOut in join_output:
+                out_num = joinOut.split("OUTPUT ")[1][:1]
+                output_step += 'OUTPUT ' + out_num + ", "
+            output_step = output_step[:len(output_step)-2]
+            output_step += ")"
+            output.append(cur_step[:2] + "OUTPUT " + str(output_count) + ": " + output_step)
+            output_count += 1
 
 
         else:  # for operations that need 1 or 0 inputs
-            if holdOutput is not None:
-                # print(holdOutput[:2] + " " + curStep)
-                if int(holdOutput[:2]) == int(curStep[:2]):
-                    useHold = True
+            if hold_output is not None:
+                # print(hold_output[:2] + " " + cur_step)
+                if int(hold_output[:2]) == int(cur_step[:2]):
+                    use_hold = True
             if curLayer < aboveLayer:  # check if need to store output for far future use
-                print(curStep[2:])
-                output.append(curStep[:2] + "OUTPUT " + str(outputCount) + ": " + curStep[2:])
-                holdOutput = curStep
-                holdInt = outputCount
-                outputCount += 1
+                print(cur_step[3:])
+                output.append(cur_step[:2] + "OUTPUT " + str(output_count) + ": " + cur_step[3:])
+                hold_output = cur_step
+                hold_int = output_count
+                output_count += 1
             else:  # output not needed in far future
-                if "Hash" in curStep:  # for operation that takes 1 input
-                    if output[outputCount-1] is not None:
-                        # print(curStep[2:] + " on " + output[outputCount-1])
-                        # output[outputCount-1] = get previous output
-                        print(curStep[2:] + " on OUTPUT " + str(outputCount - 1))
-                        output.append(curStep[:2]+"OUTPUT " + str(outputCount) + ": " + curStep[2:] + " on OUTPUT " + str(outputCount - 1))
-                        outputCount += 1
-#                    else:  # for operation that takes 0 input
-#                        print(curStep[2:])
-#                        output.append( "OUTPUT " + str(outputCount) + ": " + curStep[2:])
-#                        outputCount += 1
-                else: # steps excluding hash
-                    print(curStep[2:])
-                    output.append(curStep[:2] + "OUTPUT " + str(outputCount) + ": " + curStep[2:])
-                    outputCount += 1
+                if "Hash" in cur_step:  # for operation that takes 1 input
+                    if output[output_count - 1] is not None:
+                        # print(cur_step[2:] + " on " + output[output_count-1])
+                        # output[output_count-1] = get previous output
+                        print(cur_step[3:] + " on OUTPUT " + str(output_count - 1))
+                        output.append(
+                            cur_step[:2] + "OUTPUT " + str(output_count) + ": " + cur_step[3:] + " on OUTPUT " + str(
+                                output_count - 1))
+                        output_count += 1
+                #                    else:  # for operation that takes 0 input
+                #                        print(cur_step[2:])
+                #                        output.append( "OUTPUT " + str(output_count) + ": " + cur_step[2:])
+                #                        output_count += 1
+                else:  # steps excluding hash
+                    print(cur_step[3:])
+                    output.append(cur_step[:2] + "OUTPUT " + str(output_count) + ": " + cur_step[3:])
+                    output_count += 1
 
         length -= 1
 
     print()
+    final_output = []
     for out in output:
         print(out[2:])
+        final_output.append(out[2:])
+
+    print(final_output)
+    return final_output

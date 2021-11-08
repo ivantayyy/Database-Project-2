@@ -28,18 +28,18 @@ def qep_button():
 
     qep = db.execute_query(query=sql_query, explain=True, analyze=False)
     query_steps = preprocessing(qep)
-    annotate(query_steps)
+    output = annotate(query_steps)
 
     count = 0
-    for x in query_steps:
+    for x in output:
         step_label = Label(root, text="Step " + str(count+1))
         step_label.grid(row=count+2, column=0)
         qep_step = Label(root, text=x)
         qep_step.grid(row=count+2, column=1)
         count += 1
 
-    qep_big = Label(root, text=qep)
-    qep_big.grid(row=8, column=0, columnspan =3)
+    # qep_big = Label(root, text=qep)
+    # qep_big.grid(row=8, column=0, columnspan =3)
     button = Button(root, text="Reset", command=reset)
     button.grid(row=9, column=1, ipadx=80)
 
