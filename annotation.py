@@ -61,7 +61,6 @@ def annotate(query_steps):
             output.append(cur_step[:2] + "OUTPUT " + str(output_count) + ": " + output_step)
             output_count += 1
 
-
         else:  # for operations that need 1 or 0 inputs
             if hold_output is not None:
                 # print(hold_output[:2] + " " + cur_step)
