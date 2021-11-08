@@ -24,7 +24,7 @@ def qep_button():
     query_string.grid(row=1, column=1)
 
     db = Database()
-    db.connect(host='localhost', port='5432', database='TPC-H', user='postgres', pw='KtsGL9dL!')
+    db.connect(host='localhost', port='5432', database='TPC-H', user='postgres', pw='1121')
 
     qep = db.execute_query(query=sql_query, explain=True, analyze=False)
     query_steps = preprocessing(qep)
