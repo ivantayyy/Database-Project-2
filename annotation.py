@@ -5,6 +5,7 @@ def annotate(querySteps):
     holdOutput = None
     holdInt = 0
     output = []
+    output_clean = []
     outputCount = 0
     useHold = False
     while length >= 1:
@@ -14,23 +15,23 @@ def annotate(querySteps):
         # print("length: "+ str(length)+" querystep: "+querySteps[length-1])
 
         if "Join" in curStep or "Loop" in curStep:  # for operations that need 2 inputs
-#            if useHold:
-#                # print(curStep[2:] + " on " + holdOutput[2:] + " and on " + output[2:])
-#                outputStep = curStep[2:] + " on OUTPUT " + str(holdInt) + " and on OUTPUT " + str(
-#                    outputCount - 1)
-#                print(outputStep)
-#               useHold = False
-#            else:
-#                # print(curStep[2:] + " on " + querySteps[length + 1][2:] + " and on " + output[2:])
-#                outputStep = curStep[2:] + " on OUTPUT " + str(outputCount-2) + " and on OUTPUT " + str(outputCount-1)
-#                print(outputStep)
-#                if holdOutput is not None:
-#                    # print(holdOutput[:2] + " " + curStep)
-#                    if int(holdOutput[:2]) == int(curStep[:2]):
-#                        # print("usehold is true")
-#                        useHold = True
-#            output.append(curStep[:2]+"OUTPUT " + str(outputCount) + ": "+outputStep)
-#            outputCount += 1
+            #            if useHold:
+            #                # print(curStep[2:] + " on " + holdOutput[2:] + " and on " + output[2:])
+            #                outputStep = curStep[2:] + " on OUTPUT " + str(holdInt) + " and on OUTPUT " + str(
+            #                    outputCount - 1)
+            #                print(outputStep)
+            #               useHold = False
+            #            else:
+            #                # print(curStep[2:] + " on " + querySteps[length + 1][2:] + " and on " + output[2:])
+            #                outputStep = curStep[2:] + " on OUTPUT " + str(outputCount-2) + " and on OUTPUT " + str(outputCount-1)
+            #                print(outputStep)
+            #                if holdOutput is not None:
+            #                    # print(holdOutput[:2] + " " + curStep)
+            #                    if int(holdOutput[:2]) == int(curStep[:2]):
+            #                        # print("usehold is true")
+            #                        useHold = True
+            #            output.append(curStep[:2]+"OUTPUT " + str(outputCount) + ": "+outputStep)
+            #            outputCount += 1
             joinOutput = []
             i = 0
             limit = None
@@ -57,7 +58,6 @@ def annotate(querySteps):
             outputStep += ")"
             output.append(curStep[:2]+"OUTPUT " + str(outputCount) + ": "+outputStep)
             outputCount += 1
-
 
         else:  # for operations that need 1 or 0 inputs
             if holdOutput is not None:
@@ -90,5 +90,9 @@ def annotate(querySteps):
         length -= 1
 
     print()
+
     for out in output:
         print(out[2:])
+        output_clean.append(out[2:])
+
+    return output_clean
