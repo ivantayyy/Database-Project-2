@@ -1,5 +1,4 @@
 import re
-import json
 
 
 def preprocessing(qep):
@@ -43,16 +42,13 @@ def preprocessing(qep):
     return filtered_steps
 
 
+# Preprocess JSON QEP, remove unnecessary brackets
 def preprocess_json(qep):
     qep = qep[0]
     qep = qep[0]
     qep = qep[0]
     print('Pre-processed QEP: ')
-    print(type(qep))
     print(qep)
-    # print(qep['Plan']['Node Type'])
-    # print(qep[4:len(qep)-5])
-    # qep_dict = json.loads(qep)
-    # print(qep_dict['Plan'])
+    print()
 
     return qep
