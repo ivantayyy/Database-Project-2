@@ -7,7 +7,7 @@ WIDTH = 1850
 root = Tk()
 root.geometry()
 
-canvas = Canvas(root, height=HEIGHT, width=WIDTH)
+canvas = Canvas(root, height=HEIGHT*0.75, width=WIDTH*0.75)
 canvas.pack()
 
 frame = Frame(root, bg="#66b3ff")
