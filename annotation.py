@@ -250,6 +250,9 @@ def annotate_json(processed_qep, input_query):
                 diff = len(step_str) - (len(cur_item[0]) + len(cur_item[4]) + 2)
                 if diff > 0:
                     cursor = cur_item[1] + offset + len(cur_item[0]) + len(cur_item[4]) + 2
+                    check = cur_item[1] + offset + len(cur_item[0]) + 1
+                    if output_query[check:check + 2].lower() == 'as':
+                        cursor += 3
                     print(cur_item)
                     output_query = output_query[:cursor].ljust(diff + len(output_query[:cursor]), ' ') + output_query[
                                                                                                          cursor:]
