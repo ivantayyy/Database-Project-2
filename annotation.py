@@ -185,8 +185,12 @@ def annotate_json(processed_qep, input_query):
         item_start_loc = segment_start_loc
         for item in items:
             # print('item_start_loc', item_start_loc)
-            item_name = item.split(' ')[0]
-            alias = item.split(' ')[1]
+            if len(item.split(' as ')) == 2:
+                item_name = item.split(' as ')[0]
+                alias = item.split(' as ')[1]
+            else:
+                item_name = item.split(' ')[0]
+                alias = item.split(' ')[1]
             print('plan_index: ', plan_index)
             if len(item_name) > 0 and len(all_from_clause_annotation) > 0:
                 print('Item name:')
