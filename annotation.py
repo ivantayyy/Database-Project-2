@@ -334,9 +334,22 @@ def annotate_json(processed_qep, input_query):
             filtered = list(filter(lambda x: (x[0] == operator), all_others_annotation))
             match = None
             for x in filtered:
+                is_match = True
                 for e in x[1]:
-                    if operand_tuples[0][0] == e[0]:
-                        match = x
+                    # print(e[0])
+                    # print(operand_tuples[0][0])
+                    # print(operand_tuples[1][0])
+                    if e[1][0] == '$' or e[1] == 'SubPlan':
+                        if (operand_tuples[0][0] != e[0]) and (operand_tuples[1][0] != e[0]):
+                            is_match = False
+                    else:
+                        if (operand_tuples[0] != e) and (operand_tuples[1] != e):
+                            is_match = False
+                    # print(is_match)
+                if is_match:
+                    print('matched')
+                    match = x
+                # print()
             print('matched: ', match)
             if match is not None:
                 spacing = ''.ljust(len(words[0]) + 1)
@@ -436,19 +449,25 @@ def build_step(cur_plan, acting_on):
 
 def build_other_annotation(cur_plan, step_index):
     annotations = []
-
+    label = cur_plan['Node Type']
     if 'Merge Cond' in cur_plan:
-        annotations.append(cur_plan['Merge Cond'])
+        annotations.append((cur_plan['Merge Cond'], label))
     if 'Hash Cond' in cur_plan:
-        annotations.append(cur_plan['Hash Cond'])
+        annotations.append((cur_plan['Hash Cond'], label))
     if 'Index Cond' in cur_plan:
-        annotations.append(cur_plan['Index Cond'])
+        # label = cur_plan['Node Type'] + ' w/ Cond'
+        label = 'Index Cond'
+        annotations.append((cur_plan['Index Cond'], label))
     if 'Filter' in cur_plan:
-        annotations.append(cur_plan['Filter'])
+        # label = cur_plan['Node Type'] + ' w/ Filter'
+        label = 'Filter'
+        annotations.append((cur_plan['Filter'], label))
     if 'Join Filter' in cur_plan:
-        annotations.append(cur_plan['Join Filter'])
+        # label = cur_plan['Node Type'] + ' w/ Filter'
+        label = 'Join Filter'
+        annotations.append((cur_plan['Join Filter'], label))
 
-    for annotation in annotations:
+    for annotation, label in annotations:
         annotation = re.sub('[()]', '', annotation)
         expressions = re.split(r' AND | OR ', annotation)
         # print("annotation: ", annotation)
@@ -486,4 +505,4 @@ def build_other_annotation(cur_plan, step_index):
                     name = name.lower()
                 operands.append((alias, name))
 
-            all_others_annotation.append((operator, operands, step_index, cur_plan['Node Type']))
+            all_others_annotation.append((operator, operands, step_index, label))
