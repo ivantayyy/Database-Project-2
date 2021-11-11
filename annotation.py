@@ -314,7 +314,12 @@ def annotate_json(processed_qep, input_query):
                 # Else, it may be either a sub-plan, numerical constant, or string.
                 elements = operand.split('.')
                 if len(elements) > 1:
-                    operand_tuples.append((elements[0], elements[1]))
+                    if len(re.findall("^[0-9]*$", elements[0])) > 0 and len(re.findall("^[0-9]*$", elements[1])) > 0:
+                        alias = '$NUM'
+                        name = operand
+                    else:
+                        alias = elements[0]
+                        name = elements[1]
                 else:
                     name = elements[0]
                     if name == '':
@@ -324,10 +329,11 @@ def annotate_json(processed_qep, input_query):
                         alias = '$NUM'
                     elif len(re.findall("[\'\"]", name)) > 0:
                         alias = '$STR'
+                        name = name.strip('\'')
                     else:
                         print('ERROR')
                         alias = 'ERR'
-                    operand_tuples.append((alias, name))
+                operand_tuples.append((alias, name))
 
             # Convert equivalent operators
             operator = words[2]
@@ -503,8 +509,12 @@ def build_other_annotation(node, step_index):
                 # If name starts with '$' or no alias in node, it is a sub-plan
                 split = element.split('.')
                 if len(split) == 2:
-                    alias = split[0]
-                    name = split[1]
+                    if len(re.findall("^[0-9]*$", split[0])) > 0 and len(re.findall("^[0-9]*$", split[1])) > 0 :
+                        alias = '$NUM'
+                        name = element
+                    else:
+                        alias = split[0]
+                        name = split[1]
                 elif 'Alias' in node:
                     alias = node['Alias']
                     name = split[0]
@@ -516,12 +526,18 @@ def build_other_annotation(node, step_index):
 
                 # Remove unnecessary for constants
                 # Define alias representing constants
-                name = name.split('::')[0]
+                print(name)
+                temp = name.split('::')
+                name = temp[0]
                 if len(re.findall("^[0-9]*$", name)) > 0:
                     alias = '$NUM'
-                if len(re.findall("[\'\"]", name)) > 0:
-                    alias = '$STR'
-                    name = name.lower()
+                if temp[0][0] == '\'' and temp[0][-1] == '\'':
+                    name = temp[0].strip('\'')
+                    if len(re.findall("^[0-9]*$", name)) > 0:
+                        alias = '$NUM'
+                    else:
+                        alias = '$STR'
+                        name = name.lower()
                 operands.append((alias, name))
 
             all_others_annotation.append((operator, operands, step_index, label))
