@@ -19,6 +19,7 @@ class Database:
     def execute_query(self, query, explain=True, analyze=False, json=False):
         if self.conn is None:
             print("Database not connected!")
+            gui.query_text.insert(END, "ERROR: Database not connected!")
             return
 
         # Open a cursor to perform database operations
@@ -36,6 +37,7 @@ class Database:
             cur.execute(cur.mogrify(header + query))
         except:
             print("SQL query execution failed. Please check SQL query.")
+            gui.query_text.insert(END, "ERROR: SQL query execution failed. Please check SQL query.")
             return None
 
         # Retrieve query results
@@ -50,16 +52,17 @@ class Database:
 
 def main():
     db = Database()
-    try:
-        db.connect(host='localhostt', port='5432', database='TPC-H', user='postgres', pw='1121')
-    except:
-        print('Database connection failed. Please check database service or login info.')
-        return
-
     # clear text fields
     gui.query_text.delete("1.0", END)
     gui.step_text.delete("1.0", END)
     gui.annotation_text.delete("1.0", END)
+
+    try:
+        db.connect(host='localhostt', port='5432', database='TPC-H', user='postgres', pw='1121')
+    except:
+        print('Database connection failed. Please check database service or login info.')
+        gui.query_text.insert(END, "ERROR: Database connection failed. Please check database service.")
+        return
 
     sql_query = gui.entry.get()
     if sql_query == "test":
