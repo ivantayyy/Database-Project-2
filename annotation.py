@@ -125,7 +125,7 @@ def annotate_json(processed_qep, input_query):
     print()
     cur_plan = plan
     get_child_plans(cur_plan)
-    all_from_clause_annotation.append(cur_from_clause_annotation)
+    # all_from_clause_annotation.append(cur_from_clause_annotation)
 
     index = 1
     for step in steps:
@@ -138,11 +138,12 @@ def annotate_json(processed_qep, input_query):
     add_lines = []
     for subplan in subplans:
         print(subplan)
-        line = (subplan['start'] - 1, '--------------- Start (' + subplan['name'] + ') ---------------')
+        line = (subplan['start'] - 1, '---------------- Start (' + subplan['name'] + ') --------------')
         add_lines.append(line)
-        line = (subplan['end'], '---------------- End (' + subplan['name'] + ') ----------------')
+        line = (subplan['end'], '---------------- End   (' + subplan['name'] + ') --------------')
         add_lines.append(line)
-    add_lines.sort(key=lambda y: y[0])
+    print(add_lines)
+    add_lines.sort()
     print(add_lines)
     for add_line in add_lines:
         output_steps.insert(add_line[0] + add_count, add_line[1])
@@ -150,22 +151,21 @@ def annotate_json(processed_qep, input_query):
 
     index = 0
     # print(len(all_from_clause_annotation))
-    # print(all_from_clause_annotation)
-    for plan_annotation in all_from_clause_annotation:
-        print('Plan ' + str(index) + ':')
-        for annotation in plan_annotation:
-            print(annotation)
-        index += 1
+    print("all_from_clause_annotation: ")
+    print(all_from_clause_annotation)
     print()
 
     # --------------------
     # Annotate Query (From)
     # --------------------
+
     reference_query = input_query.lower()
 
     global_start_loc = 0
     input_plans = reference_query.split('select')
-    # print(len(input_plans))
+    print(len(input_plans))
+    for lines in input_plans:
+        print(lines)
     num_plans = len(input_plans) - 1
     if num_plans < 1:
         print("Incorrect input query")
@@ -187,16 +187,25 @@ def annotate_json(processed_qep, input_query):
         for item in items:
             # print('item_start_loc', item_start_loc)
             item_name = item.split(' ')[0]
-            # print(item_name)
-            # print(all_from_clause_annotation)
-            item_index = [i for i, v in enumerate(all_from_clause_annotation[plan_index]) if v[0] == item_name][0]
-            item_step = all_from_clause_annotation[plan_index][item_index][1]
-            item_node_type = all_from_clause_annotation[plan_index][item_index][2]
-            # print(item_step)
-            item_tuple = (item_name, item_start_loc, item_step, item_node_type)
-            item_list.append(item_tuple)
-            print(item_tuple)
-            item_start_loc += len(item) + 2
+            alias = item.split(' ')[1]
+            print('plan_index: ', plan_index)
+            if len(item_name) > 0 and len(all_from_clause_annotation) > 0:
+                print('Item name:')
+                print(item_name)
+                print(alias)
+                print(all_from_clause_annotation)
+                target_item = [i for i, v in enumerate(all_from_clause_annotation) if v[3] == alias]
+                if len(target_item) > 0:
+                    print("target_item: ", target_item)
+                    item_index = target_item[0]
+                    item_step = all_from_clause_annotation[item_index][1]
+                    item_node_type = all_from_clause_annotation[item_index][2]
+                    # print(item_step)
+                    item_tuple = (item_name, item_start_loc, item_step, item_node_type, alias)
+                    item_list.append(item_tuple)
+                    print('here')
+                    print(item_tuple)
+                    item_start_loc += len(item) + 2
 
         plan_start_loc += len(plan) + 6
         plan_index += 1
@@ -221,10 +230,11 @@ def annotate_json(processed_qep, input_query):
             annotation_output += step_str
             item_index += 1
             i += len(step_str)
-            diff = len(step_str) - len(cur_item[0])
+            diff = len(step_str) - (len(cur_item[0]) + len(cur_item[4]) + 2)
             if diff > 0:
                 # print(diff)
-                cursor = cur_item[1] + offset + len(cur_item[0])
+                cursor = cur_item[1] + offset + len(cur_item[0]) + len(cur_item[4]) + 2
+                print(cur_item)
                 # cursor = cur_item[1] + offset
                 output_query = output_query[:cursor].ljust(diff + len(output_query[:cursor]), ' ') + output_query[cursor:]
                 offset += diff
@@ -278,6 +288,8 @@ def get_child_plans(cur_plan):
     global cur_others_annotation
     global all_others_annotation
 
+    step_index = 0
+
     if 'Plans' not in cur_plan:
         # print('No child plans')
         relation_name = cur_plan['Relation Name']
@@ -289,14 +301,13 @@ def get_child_plans(cur_plan):
         if len(pending_subplans) > 0:
             subplan_index = pending_subplans.pop()
             subplans[subplan_index]['start'] = step_index
-            all_from_clause_annotation.append(cur_from_clause_annotation)
-            cur_from_clause_annotation = []
-            all_others_annotation.append(cur_from_clause_annotation)
-            cur_others_annotation = []
+            # all_from_clause_annotation.append(cur_from_clause_annotation)
+            # cur_from_clause_annotation = []
+            # all_others_annotation.append(cur_from_clause_annotation)
+            # cur_others_annotation = []
 
-        cur_from_clause_annotation.append((relation_name, step_index, cur_plan['Node Type']))
+        all_from_clause_annotation.append((relation_name, step_index, cur_plan['Node Type'], cur_plan['Alias']))
 
-        return step_index
     else:
         child_plans = cur_plan["Plans"]
         child_index = []
@@ -314,11 +325,15 @@ def get_child_plans(cur_plan):
         for index in child_index:
             acting_on += '(' + str(index) + ')'
         step = build_step(cur_plan, acting_on)
-
         steps.append(step)
+        step_index = len(steps)
         if 'Subplan Name' in cur_plan:
-            subplans[subplan_index]['end'] = len(steps)
-        return len(steps)
+            subplans[subplan_index]['end'] = step_index
+
+
+    # Get other annotations
+
+    return step_index
 
 
 def build_step(cur_plan, acting_on):
