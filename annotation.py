@@ -149,7 +149,6 @@ def annotate_json(processed_qep, input_query):
         output_steps.insert(add_line[0] + add_count, add_line[1])
         add_count += 1
 
-    index = 0
     # print(len(all_from_clause_annotation))
     print("all_from_clause_annotation: ")
     print(all_from_clause_annotation)
@@ -223,27 +222,31 @@ def annotate_json(processed_qep, input_query):
     annotation_output = ''
     output_query = input_query
     # print(item_list[-1][1])
-    while item_index < len(item_list):
-        cur_item = item_list[item_index]
-        if cur_item[1] == i:
-            step_str = '(' + str(cur_item[2]) + ')' + cur_item[3] + ' '
-            annotation_output += step_str
-            item_index += 1
-            i += len(step_str)
-            diff = len(step_str) - (len(cur_item[0]) + len(cur_item[4]) + 2)
-            if diff > 0:
-                # print(diff)
-                cursor = cur_item[1] + offset + len(cur_item[0]) + len(cur_item[4]) + 2
-                print(cur_item)
-                # cursor = cur_item[1] + offset
-                output_query = output_query[:cursor].ljust(diff + len(output_query[:cursor]), ' ') + output_query[cursor:]
-                offset += diff
-                i -= diff
-            # print('---')
-            # print('item: ', cur_item[1])
-            # print('i: ', i)
-            # print(output_query)
-            # print(annotation_output)
+    while i < len(reference_query):
+        if item_index < len(item_list):
+            cur_item = item_list[item_index]
+            if cur_item[1] == i:
+                step_str = '(' + str(cur_item[2]) + ')' + cur_item[3] + ' '
+                annotation_output += step_str
+                item_index += 1
+                i += len(step_str)
+                diff = len(step_str) - (len(cur_item[0]) + len(cur_item[4]) + 2)
+                if diff > 0:
+                    # print(diff)
+                    cursor = cur_item[1] + offset + len(cur_item[0]) + len(cur_item[4]) + 2
+                    print(cur_item)
+                    # cursor = cur_item[1] + offset
+                    output_query = output_query[:cursor].ljust(diff + len(output_query[:cursor]), ' ') + output_query[cursor:]
+                    offset += diff
+                    i -= diff
+                # print('---')
+                # print('item: ', cur_item[1])
+                # print('i: ', i)
+                # print(output_query)
+                # print(annotation_output)
+            else:
+                annotation_output += ' '
+                i += 1
         else:
             annotation_output += ' '
             i += 1
@@ -269,12 +272,19 @@ def annotate_json(processed_qep, input_query):
     cur_pos = split_pos_list[0]
     query_list = []
     annotation_list = []
+    print(split_pos_list)
+    print(output_query)
+    print(annotation_output)
     for split_pos in split_pos_list[1:]:
         query_list.append(output_query[cur_pos:split_pos])
         annotation_list.append(annotation_output[cur_pos:split_pos])
         cur_pos = split_pos
+    query_list.append(output_query[cur_pos:])
+    annotation_list.append(annotation_output[cur_pos:])
 
     annotated_query = []
+    print(query_list),
+    print(annotation_list)
     for (query_line, annotation_line) in zip(query_list, annotation_list):
         annotated_query.append(query_line)
         annotated_query.append(annotation_line)
