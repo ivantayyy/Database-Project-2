@@ -1,53 +1,40 @@
 from tkinter import *
-from annotation import *
-from preprocessing import *
-from project import *
+from project import main
 
-HEIGHT = 1000
-WIDTH = 1000
+HEIGHT = 900
+WIDTH = 1850
 
 root = Tk()
 root.geometry()
 
-# canvas = Canvas(root, height=HEIGHT, width=WIDTH, bg="black")
-# canvas.pack()
+canvas = Canvas(root, height=HEIGHT, width=WIDTH)
+canvas.pack()
 
+frame = Frame(root, bg="#66b3ff")
+frame.place(relheight=1, relwidth=1)
+top_panel = Frame(frame, bg="#0080ff")
+top_panel.place(relx=0.0125, rely=0.025, relheight=0.075, relwidth=0.975)
+bottom_panel = Frame(frame, bg="#404040")
+bottom_panel.place(relx=0.0125, rely=0.1, relheight=0.875, relwidth=0.975)
+entry_label = Label(top_panel, text="Enter SQL:")
+entry_label.place(relx=0.0125, rely=0.25, relheight=0.5, relwidth=0.05)
+entry = Entry(top_panel)
+entry.place(relx=0.0625, rely=0.25, relheight=0.5, relwidth=0.85)
+button = Button(top_panel, text="Query", command=main)
+button.place(relx=0.9125, rely=0.25, relheight=0.5, relwidth=0.075)
+query_text = Text(bottom_panel)
+query_text.place(relx=0.0125, rely=0.025, relheight=0.1, relwidth=0.975)
+step_text = Text(bottom_panel)
+step_text.place(relx=0.0125, rely=0.15, relheight=0.825, relwidth=0.48125)
+annotation_text = Text(bottom_panel)
+annotation_text.place(relx=0.50625, rely=0.15, relheight=0.825, relwidth=0.48125)
 
-def qep_button():
-    text.delete("1.0", END)
-    sql_query = entry.get()
-    if sql_query == "test":
-        sql_query = "SELECT * from customer C, orders O where C.c_custkey = O.o_custkey"
+'''
+COLOUR PALETTE
 
-    text.insert(END, "SQL Query:" + "\n")
-    text.insert(END, sql_query + "\n\n")
+#3399ff light blue
+#0066ff blue
+#404040 gray
+#4dff88 green
 
-    db = Database()
-    db.connect(host='localhost', port='5432', database='TPC-H', user='postgres', pw='1121')
-
-    qep = db.execute_query(query=sql_query, explain=True, analyze=False)
-    query_steps = preprocessing(qep)
-    output = annotate(query_steps)
-
-    text.insert(END, "QEP:" + "\n")
-    for x in qep:
-        text.insert(END, str(x) + "\n")
-
-    text.insert(END, "\n")
-
-    text.insert(END, "Annotation:" + "\n")
-    for x in output:
-        text.insert(END, x + "\n")
-
-    entry.delete(0, END)
-    db.disconnect()
-
-
-label = Label(root, text="SQL Query:")
-label.grid(row=0, column=0)
-entry = Entry(root, width=60)
-entry.grid(row=0, column=1)
-button = Button(root, text="QEP", command=qep_button)
-button.grid(row=0, column=2, ipadx=50)
-text = Text(root, width=100)
-text.grid(row=2, columnspan=3)
+'''

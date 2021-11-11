@@ -2,6 +2,7 @@ import psycopg2
 from annotation import *
 from preprocessing import *
 from interface import *
+import interface as gui
 
 
 class Database:
@@ -44,9 +45,19 @@ class Database:
 def main():
     db = Database()
     db.connect(host='localhost', port='5432', database='TPC-H', user='postgres', pw='1121')
-    #sql_query = "SELECT * from customer AS C, orders AS O where C.c_custkey = O.o_custkey"
-    sql_query = "SELECT s.s_acctbal, s.s_name, n.n_name, p.p_partkey, p.p_mfgr, s.s_address, s.s_phone, s.s_comment FROM part p, supplier s, partsupp ps, nation n, region r WHERE p.p_partkey != ps.ps_partkey AND s.s_suppkey = ps.ps_suppkey AND p.p_size = 15 AND p.p_type LIKE '%BRASS' AND s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND r.r_name = 'EUROPE' AND ps.ps_supplycost = ( SELECT MIN(ps1.ps_supplycost) FROM partsupp ps1, supplier s1, nation n1, region r1 WHERE p.p_partkey = ps1.ps_partkey AND s1.s_suppkey = ps1.ps_suppkey AND s1.s_nationkey = n1.n_nationkey AND n1.n_regionkey = r1.r_regionkey AND r1.r_name = 'EUROPE') ORDER BY s.s_acctbal DESC, n.n_name, s.s_name, p.p_partkey "
-    #sql_query = "SELECT PS.ps_availqty from partsupp PS, supplier S, customer C, orders O where S.s_suppkey = PS.ps_suppkey and C.c_custkey = O.o_custkey ORDER BY S.s_name"
+    # sql_query = "SELECT * from customer AS C, orders AS O where C.c_custkey = O.o_custkey"
+
+    # clear text fields
+    gui.query_text.delete("1.0", END)
+    gui.step_text.delete("1.0", END)
+    gui.annotation_text.delete("1.0", END)
+
+    sql_query = gui.entry.get()
+    if sql_query == "test":
+        sql_query = "SELECT s.s_acctbal, s.s_name, n.n_name, p.p_partkey, p.p_mfgr, s.s_address, s.s_phone, s.s_comment FROM part p, supplier s, partsupp ps, nation n, region r WHERE p.p_partkey != ps.ps_partkey AND s.s_suppkey = ps.ps_suppkey AND p.p_size = 15 AND p.p_type LIKE '%BRASS' AND s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND r.r_name = 'EUROPE' AND ps.ps_supplycost = ( SELECT MIN(ps1.ps_supplycost) FROM partsupp ps1, supplier s1, nation n1, region r1 WHERE p.p_partkey = ps1.ps_partkey AND s1.s_suppkey = ps1.ps_suppkey AND s1.s_nationkey = n1.n_nationkey AND n1.n_regionkey = r1.r_regionkey AND r1.r_name = 'EUROPE') ORDER BY s.s_acctbal DESC, n.n_name, s.s_name, p.p_partkey "
+    gui.entry.delete(0, END)
+
+    # sql_query = "SELECT PS.ps_availqty from partsupp PS, supplier S, customer C, orders O where S.s_suppkey = PS.ps_suppkey and C.c_custkey = O.o_custkey ORDER BY S.s_name"
     # sql_query = "SELECT C.c_custkey,C.c_name,N.n_name " \
     #             "from customer C, Nation N, Orders O " \
     #             "where C.c_nationkey = N.n_nationkey " \
@@ -74,10 +85,21 @@ def main():
         print(line)
     print('==========================================================================')
 
+    # populate text fields
+    gui.query_text.insert(END, "SQL Query: " + sql_query)
+    gui.step_text.insert(END, "STEPS:" + "\n")
+    for step in output_steps:
+        gui.step_text.insert(END, step + "\n")
+    gui.annotation_text.insert(END, "ANNOTATED QUERY:" + "\n")
+    for line in annotated_query:
+        gui.annotation_text.insert(END, line + "\n")
+
+    output_steps.clear()
+    annotated_query.clear()
     db.disconnect()
 
 
 if __name__ == '__main__':
-    main()
-    # root.mainloop()
+    # main()
+    root.mainloop()
 
