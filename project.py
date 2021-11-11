@@ -103,12 +103,39 @@ def main():
     for step in output_steps:
         gui.step_text.insert(END, step + "\n")
     gui.annotation_text.insert(END, "ANNOTATED QUERY:" + "\n")
+    gui.annotation_text.tag_config("blue", foreground="blue")
     for line in annotated_query:
         gui.annotation_text.insert(END, line + "\n")
+    # add blue
+    blue()
 
-    output_steps.clear()
-    annotated_query.clear()
     db.disconnect()
+
+
+def blue():
+    gui.annotation_text.tag_add("blue", "5.0", "5.100")
+    gui.annotation_text.tag_add("blue", "7.0", "7.100")
+    gui.annotation_text.tag_add("blue", "9.0", "9.100")
+    gui.annotation_text.tag_add("blue", "11.0", "11.100")
+    gui.annotation_text.tag_add("blue", "13.0", "13.100")
+    gui.annotation_text.tag_add("blue", "15.0", "15.100")
+    gui.annotation_text.tag_add("blue", "17.0", "17.100")
+    gui.annotation_text.tag_add("blue", "19.0", "19.100")
+    gui.annotation_text.tag_add("blue", "21.0", "21.100")
+    gui.annotation_text.tag_add("blue", "23.0", "23.100")
+    gui.annotation_text.tag_add("blue", "25.0", "25.100")
+    gui.annotation_text.tag_add("blue", "27.0", "27.100")
+    gui.annotation_text.tag_add("blue", "29.0", "29.100")
+    gui.annotation_text.tag_add("blue", "31.0", "31.100")
+    gui.annotation_text.tag_add("blue", "33.0", "33.100")
+    gui.annotation_text.tag_add("blue", "35.0", "35.100")
+    gui.annotation_text.tag_add("blue", "37.0", "37.100")
+    gui.annotation_text.tag_add("blue", "39.0", "39.100")
+    gui.annotation_text.tag_add("blue", "41.0", "41.100")
+    gui.annotation_text.tag_add("blue", "43.0", "43.100")
+    gui.annotation_text.tag_add("blue", "45.0", "45.100")
+    gui.annotation_text.tag_add("blue", "47.0", "47.100")
+    gui.annotation_text.tag_add("blue", "49.0", "49.100")
 
 
 if __name__ == '__main__':
