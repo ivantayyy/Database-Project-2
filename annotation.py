@@ -1,4 +1,5 @@
 import json
+import re
 
 
 def annotate(query_steps):
@@ -115,6 +116,7 @@ steps = []
 subplans = []
 pending_subplans = []
 sql_keywords = ['select ', 'from ', 'where ', 'order by ', 'group by ', 'and ', 'or ']
+key_operators = ['=', '>', '<', '~~', '>=', '<=', '!=', '<>']
 
 
 def annotate_json(processed_qep, input_query):
@@ -126,6 +128,10 @@ def annotate_json(processed_qep, input_query):
     cur_plan = plan
     get_child_plans(cur_plan)
     # all_from_clause_annotation.append(cur_from_clause_annotation)
+    print('\nALL OTHER ANNOTATIONS >>>>>>>>>>>>>>>>>>>>>')
+    for lines in all_others_annotation:
+        print(lines)
+    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
 
     index = 1
     for step in steps:
@@ -162,9 +168,9 @@ def annotate_json(processed_qep, input_query):
 
     global_start_loc = 0
     input_plans = reference_query.split('select')
-    print(len(input_plans))
-    for lines in input_plans:
-        print(lines)
+    # print(len(input_plans))
+    # for lines in input_plans:
+    #     print(lines)
     num_plans = len(input_plans) - 1
     if num_plans < 1:
         print("Incorrect input query")
@@ -191,31 +197,27 @@ def annotate_json(processed_qep, input_query):
             else:
                 item_name = item.split(' ')[0]
                 alias = item.split(' ')[1]
-            print('plan_index: ', plan_index)
+            # print('plan_index: ', plan_index)
             if len(item_name) > 0 and len(all_from_clause_annotation) > 0:
-                print('Item name:')
-                print(item_name)
-                print(alias)
-                print(all_from_clause_annotation)
+                # print('Item name:')
+                # print(item_name)
+                # print(alias)
+                # print(all_from_clause_annotation)
                 target_item = [i for i, v in enumerate(all_from_clause_annotation) if v[3] == alias]
                 if len(target_item) > 0:
-                    print("target_item: ", target_item)
+                    # print("target_item: ", target_item)
                     item_index = target_item[0]
                     item_step = all_from_clause_annotation[item_index][1]
                     item_node_type = all_from_clause_annotation[item_index][2]
                     # print(item_step)
                     item_tuple = (item_name, item_start_loc, item_step, item_node_type, alias)
                     item_list.append(item_tuple)
-                    print('here')
-                    print(item_tuple)
+                    # print('here')
+                    # print(item_tuple)
                     item_start_loc += len(item) + 2
 
         plan_start_loc += len(plan) + 6
         plan_index += 1
-
-    # --------------------
-    # Annotate Query (Others)
-    # --------------------
 
     # --------------------
     # Insert Annotation
@@ -240,7 +242,8 @@ def annotate_json(processed_qep, input_query):
                     cursor = cur_item[1] + offset + len(cur_item[0]) + len(cur_item[4]) + 2
                     print(cur_item)
                     # cursor = cur_item[1] + offset
-                    output_query = output_query[:cursor].ljust(diff + len(output_query[:cursor]), ' ') + output_query[cursor:]
+                    output_query = output_query[:cursor].ljust(diff + len(output_query[:cursor]), ' ') + output_query[
+                                                                                                         cursor:]
                     offset += diff
                     i -= diff
                 # print('---')
@@ -276,9 +279,9 @@ def annotate_json(processed_qep, input_query):
     cur_pos = split_pos_list[0]
     query_list = []
     annotation_list = []
-    print(split_pos_list)
-    print(output_query)
-    print(annotation_output)
+    # print(split_pos_list)
+    # print(output_query)
+    # print(annotation_output)
     for split_pos in split_pos_list[1:]:
         query_list.append(output_query[cur_pos:split_pos])
         annotation_list.append(annotation_output[cur_pos:split_pos])
@@ -286,9 +289,65 @@ def annotate_json(processed_qep, input_query):
     query_list.append(output_query[cur_pos:])
     annotation_list.append(annotation_output[cur_pos:])
 
+    # --------------------
+    # Annotate Query (Others)
+    # --------------------
+    print('\n###################### ANNOTATE OTHERS ##################')
+    keywords = ['where', 'and', 'or']
+    line_num = 0
+    for query_line in query_list:
+        words = query_line.lower().strip().split(' ')
+        # print(words)
+        # expression = ''.join(words[1:])
+        operand_tuples = []
+        if words[0] in keywords:
+            operands = [re.sub('[()]', '', words[1]), re.sub('[()]', '', words[3])]
+            # print(operands)
+            for operand in operands:
+                elements = operand.split('.')
+                if len(elements) > 1:
+                    operand_tuples.append((elements[0], elements[1]))
+                else:
+                    name = elements[0]
+                    if name == '':
+                        # print('subplan')
+                        alias = '$SP'
+                        name = 'SubPlan'
+                    elif len(re.findall("^[0-9]*$", name)) > 0:
+                        # print('numerical')
+                        alias = '$NUM'
+                    elif len(re.findall("[\'\"]", name)) > 0:
+                        # print('string')
+                        alias = '$STR'
+                    else:
+                        print('ERROR')
+                        alias = 'ERR'
+                    operand_tuples.append((alias, name))
+            operator = words[2]
+            if operator == 'like':
+                operator = '~~'
+            if operator == '!=':
+                operator = '<>'
+            print((operator, operand_tuples))
+
+            # Matching
+            filtered = list(filter(lambda x: (x[0] == operator), all_others_annotation))
+            match = None
+            for x in filtered:
+                for e in x[1]:
+                    if operand_tuples[0][0] == e[0]:
+                        match = x
+            print('matched: ', match)
+            if match is not None:
+                spacing = ''.ljust(len(words[0]) + 1)
+                annotation_list[line_num] = spacing + '(' + str(match[2]) + ')' + match[3]
+            print()
+        line_num += 1
+    print('########################################################\n')
+
     annotated_query = []
-    print(query_list),
-    print(annotation_list)
+    # print(query_list),
+    # print(annotation_list)
     for (query_line, annotation_line) in zip(query_list, annotation_list):
         annotated_query.append(query_line)
         annotated_query.append(annotation_line)
@@ -344,8 +403,8 @@ def get_child_plans(cur_plan):
         if 'Subplan Name' in cur_plan:
             subplans[subplan_index]['end'] = step_index
 
-
     # Get other annotations
+    build_other_annotation(cur_plan, step_index)
 
     return step_index
 
@@ -362,7 +421,6 @@ def build_step(cur_plan, acting_on):
         step += 'with merge condition ' + cur_plan['Merge Cond'] + ' '
     if 'Hash Cond' in cur_plan:
         step += 'with hash condition ' + cur_plan['Hash Cond'] + ' '
-        cur_others_annotation.append((cur_plan['Hash Cond'], ))
     if 'Index Cond' in cur_plan:
         step += 'with index condition ' + cur_plan['Index Cond'] + ' '
     if 'Filter' in cur_plan:
@@ -374,3 +432,58 @@ def build_step(cur_plan, acting_on):
     if 'Subplan Name' in cur_plan:
         step += 'to form (' + cur_plan['Subplan Name'] + ') '
     return step
+
+
+def build_other_annotation(cur_plan, step_index):
+    annotations = []
+
+    if 'Merge Cond' in cur_plan:
+        annotations.append(cur_plan['Merge Cond'])
+    if 'Hash Cond' in cur_plan:
+        annotations.append(cur_plan['Hash Cond'])
+    if 'Index Cond' in cur_plan:
+        annotations.append(cur_plan['Index Cond'])
+    if 'Filter' in cur_plan:
+        annotations.append(cur_plan['Filter'])
+    if 'Join Filter' in cur_plan:
+        annotations.append(cur_plan['Join Filter'])
+
+    for annotation in annotations:
+        annotation = re.sub('[()]', '', annotation)
+        expressions = re.split(r' AND | OR ', annotation)
+        # print("annotation: ", annotation)
+        # print("elements: ", elements)
+        for expression in expressions:
+            elements = expression.split(' ')
+            if 'SubPlan' in elements:
+                index = elements.index('SubPlan')
+                # elements[index] = ' '.join([elements[index], elements[index + 1]])
+                del elements[index + 1]
+            operator = elements[1]
+            operands = []
+            for element in [elements[0], elements[2]]:
+                split = element.split('.')
+                if len(split) == 2:
+                    alias = split[0]
+                    name = split[1]
+                elif 'Alias' in cur_plan:
+                    alias = cur_plan['Alias']
+                    name = split[0]
+                    print(cur_plan)
+                    if split[0][0] == '$':
+                        alias = '$SP'
+                else:
+                    alias = '$SP'
+                    name = split[0]
+                    print(cur_plan)
+                name = name.split('::')[0]
+                if len(re.findall("^[0-9]*$", name)) > 0:
+                    print('numerical')
+                    alias = '$NUM'
+                if len(re.findall("[\'\"]", name)) > 0:
+                    print('string')
+                    alias = '$STR'
+                    name = name.lower()
+                operands.append((alias, name))
+
+            all_others_annotation.append((operator, operands, step_index, cur_plan['Node Type']))
