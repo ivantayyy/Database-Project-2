@@ -4,9 +4,6 @@ from preprocessing import *
 from interface import *
 import interface as gui
 
-USERNAME = "postgres"
-PASSWORD = "1121"
-
 
 class Database:
     def __init__(self):
@@ -14,7 +11,8 @@ class Database:
 
     def connect(self, host, port, database, user, pw):
         # Connect to your postgres DB
-        self.conn = psycopg2.connect(host="localhost", port=5432, database="TPC-H", user=user, password=pw)
+        print(host, port, database, user, pw)
+        self.conn = psycopg2.connect(host=host, port=port, database=database, user=user, password=pw)
 
     def disconnect(self):
         self.conn.close()
@@ -53,19 +51,14 @@ class Database:
         return query_results
 
 
+db1 = Database()
+
+
 def main():
-    db = Database()
     # clear text fields
     gui.query_text.delete("1.0", END)
     gui.step_text.delete("1.0", END)
     gui.annotation_text.delete("1.0", END)
-
-    try:
-        db.connect(host='localhostt', port='5432', database='TPC-H', user=USERNAME, pw=PASSWORD)
-    except:
-        print('Database connection failed. Please check database service or login info.')
-        gui.query_text.insert(END, "ERROR: Database connection failed. Please check database service.")
-        return
 
     sql_query = gui.entry.get()
     if sql_query == "1":
@@ -90,7 +83,7 @@ def main():
     #             "WHERE p.p_size > 10 " \
     #             ") " \
     #             ") "
-    qep = db.execute_query(query=sql_query, explain=True, analyze=False, json=True)
+    qep = db1.execute_query(query=sql_query, explain=True, analyze=False, json=True)
     if qep is None:
         return
     processed_qep = preprocess_json(qep)
@@ -117,18 +110,40 @@ def main():
     # add blue
     blue()
 
-    db.disconnect()
-
 
 def login():
+    host = gui.host_entry.get()
+    port = gui.port_entry.get()
+    db_name = gui.db_entry.get()
     username = gui.user_entry.get()
     password = gui.pw_entry.get()
     gui.message.delete("1.0", END)
-    if username == USERNAME and password == PASSWORD:
+
+    print(host, port, db_name, username, password)
+    gui.message.insert(END, "Connecting to database...")
+
+    try:
+        db1.connect(host=host, port=port, database=db_name, user=username, pw=password)
         gui.message.insert(END, "Login Success")
         gui.home_screen()
-    else:
-        gui.message.insert(END, "Incorrect user or password")
+        print('DB Connected')
+
+        gui.host_entry.delete("0", END)
+        gui.port_entry.delete("0", END)
+        gui.db_entry.delete("0", END)
+        gui.user_entry.delete("0", END)
+        gui.pw_entry.delete("0", END)
+        gui.message.delete("1.0", END)
+
+    except:
+        print('Database connection failed. Please check database service or login info.')
+        gui.message.delete("1.0", END)
+        gui.message.insert(END, "Database connection failed. Please check database service or login info.")
+
+
+def logout():
+    print('DB Disconnected')
+    db1.disconnect()
 
 
 def blue():
