@@ -4,6 +4,9 @@ from preprocessing import *
 from interface import *
 import interface as gui
 
+USERNAME = "postgres"
+PASSWORD = "1121"
+
 
 class Database:
     def __init__(self):
@@ -58,7 +61,7 @@ def main():
     gui.annotation_text.delete("1.0", END)
 
     try:
-        db.connect(host='localhostt', port='5432', database='TPC-H', user='postgres', pw='1121')
+        db.connect(host='localhostt', port='5432', database='TPC-H', user=USERNAME, pw=PASSWORD)
     except:
         print('Database connection failed. Please check database service or login info.')
         gui.query_text.insert(END, "ERROR: Database connection failed. Please check database service.")
@@ -117,6 +120,17 @@ def main():
     db.disconnect()
 
 
+def login():
+    username = gui.user_entry.get()
+    password = gui.pw_entry.get()
+    gui.message.delete("1.0", END)
+    if username == USERNAME and password == PASSWORD:
+        gui.message.insert(END, "Login Success")
+        gui.home_screen()
+    else:
+        gui.message.insert(END, "Incorrect user or password")
+
+
 def blue():
     gui.annotation_text.tag_add("blue", "5.0", "5.100")
     gui.annotation_text.tag_add("blue", "7.0", "7.100")
@@ -144,5 +158,4 @@ def blue():
 
 
 if __name__ == '__main__':
-    # main()
-    root.mainloop()
+    account_login_screen()
