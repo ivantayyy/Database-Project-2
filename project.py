@@ -39,6 +39,8 @@ class Database:
         except:
             print("SQL query execution failed. Please check SQL query.")
             gui.query_text.insert(END, "ERROR: SQL query execution failed. Please check SQL query.")
+            cur.execute("ROLLBACK")
+            cur.close()
             return None
 
         # Retrieve query results
